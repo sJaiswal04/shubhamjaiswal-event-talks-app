@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Dashboard</title>
+    <meta name="description" content="Stay up-to-date with the latest Google Cloud BigQuery release notes. Track features, issues, changes, and deprecations, and share updates on X (Twitter).">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar / Header Area -->
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="gcp-logo-emblem">
+                    <span class="emblem-red"></span>
+                    <span class="emblem-blue"></span>
+                    <span class="emblem-green"></span>
+                    <span class="emblem-yellow"></span>
+                </div>
+                <div class="logo-text">
+                    <h1>BigQuery</h1>
+                    <span class="logo-sub">Release Notes Hub</span>
+                </div>
+            </div>
+            
+            <!-- Quick Stats Summary -->
+            <section class="stats-panel" aria-label="Release Statistics">
+                <div class="stat-card" id="stat-total">
+                    <span class="stat-value">-</span>
+                    <span class="stat-label">Total Updates</span>
+                </div>
+                <div class="stat-card" id="stat-features">
+                    <span class="stat-value">-</span>
+                    <span class="stat-label">Features</span>
+                </div>
+                <div class="stat-card" id="stat-issues">
+                    <span class="stat-value">-</span>
+                    <span class="stat-label">Issues</span>
+                </div>
+                <div class="stat-card" id="stat-changes">
+                    <span class="stat-value">-</span>
+                    <span class="stat-label">Changes</span>
+                </div>
+            </section>
+            
+            <div class="header-actions">
+                <button id="theme-toggle-btn" class="icon-btn" aria-label="Toggle dark/light theme" title="Toggle Theme">
+                    <!-- Moon Icon (for Light mode trigger) -->
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <!-- Sun Icon (for Dark mode trigger) -->
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+                
+                <button id="refresh-btn" class="primary-btn" aria-label="Refresh release notes" title="Refresh Feed">
+                    <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+            
+            <div class="sync-info">
+                <span>Last checked: </span><span id="last-sync-time">-</span>
+            </div>
+        </header>
+
+        <!-- Main Workspace Area -->
+        <main class="app-main">
+            <!-- Controls (Search + Filters) -->
+            <section class="controls-bar" aria-label="Filters and Search">
+                <div class="search-wrapper">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="search-input" placeholder="Search update content or date..." aria-label="Search release notes">
+                </div>
+                
+                <div class="filter-wrapper">
+                    <span class="filter-label">Filter by type:</span>
+                    <div class="filter-tags" role="group" aria-label="Filter update types">
+                        <button class="filter-tag active" data-type="all" id="filter-all-btn">All</button>
+                        <button class="filter-tag" data-type="feature" id="filter-feature-btn">Features</button>
+                        <button class="filter-tag" data-type="issue" id="filter-issue-btn">Issues</button>
+                        <button class="filter-tag" data-type="change" id="filter-change-btn">Changes</button>
+                        <button class="filter-tag" data-type="deprecation" id="filter-deprecation-btn">Deprecations</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Warning Banner (Conditional) -->
+            <div id="warning-banner" class="warning-banner hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span id="warning-text"></span>
+                <button id="close-warning-btn" class="close-btn" aria-label="Dismiss warning">&times;</button>
+            </div>
+
+            <!-- Release Notes Feed Grid -->
+            <section class="feed-section">
+                <!-- Skeleton Loader -->
+                <div id="skeleton-loader" class="skeleton-container hidden">
+                    <div class="skeleton-date-group">
+                        <div class="skeleton-date-header"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+                    <div class="skeleton-date-group">
+                        <div class="skeleton-date-header"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+                </div>
+
+                <!-- Feed Content -->
+                <div id="feed-content" class="feed-container">
+                    <!-- Generated dynamically via JS -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <h3>No release notes found</h3>
+                    <p>Try modifying your search or filters, or hit refresh to fetch new notes.</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Slide-out Tweet Composer Drawer -->
+        <aside id="tweet-drawer" class="tweet-drawer" aria-label="Tweet Composer">
+            <div class="drawer-handle" id="drawer-handle"></div>
+            <div class="drawer-header">
+                <h2>Tweet Composer</h2>
+                <button id="close-drawer-btn" class="close-btn" aria-label="Close composer" title="Close Composer">&times;</button>
+            </div>
+            
+            <div class="drawer-content">
+                <div class="selected-update-preview">
+                    <span class="preview-label">Selected Update:</span>
+                    <div id="selected-card-preview" class="preview-box">
+                        <!-- Tiny preview of selected card -->
+                        Select a release note card to compose a Tweet.
+                    </div>
+                </div>
+                
+                <div class="composer-area">
+                    <label for="tweet-textarea" class="composer-label">Edit your Tweet:</label>
+                    <div class="textarea-wrapper">
+                        <textarea id="tweet-textarea" rows="5" maxlength="280" placeholder="Type your update here..."></textarea>
+                        <div class="char-counter-ring-container">
+                            <span id="char-counter">280</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggested Hashtags -->
+                <div class="hashtags-selector">
+                    <span class="hashtags-label">Add Hashtags:</span>
+                    <div class="hashtags-list" id="hashtags-list">
+                        <button class="hashtag-tag" data-tag="#BigQuery">#BigQuery</button>
+                        <button class="hashtag-tag" data-tag="#GoogleCloud">#GoogleCloud</button>
+                        <button class="hashtag-tag" data-tag="#GCP">#GCP</button>
+                        <button class="hashtag-tag" data-tag="#DataEngineering">#DataEngineering</button>
+                        <button class="hashtag-tag" data-tag="#GenerativeAI">#GenerativeAI</button>
+                    </div>
+                </div>
+                
+                <div class="drawer-actions">
+                    <button id="copy-tweet-btn" class="secondary-btn" title="Copy tweet content to clipboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                        <span>Copy Text</span>
+                    </button>
+                    
+                    <button id="tweet-submit-btn" class="tweet-btn" title="Post to X (Twitter)">
+                        <!-- Twitter/X logo SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/>
+                        </svg>
+                        <span>Share on X</span>
+                    </button>
+                </div>
+                <div id="toast-message" class="toast hidden">Copied to clipboard!</div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- JS Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
